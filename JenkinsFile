@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+        tools {
+        nodejs 'NodeJS-22'
+    }
+    
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/VictorOdambatafwa22/gallery'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        //stage('Run Tests') {
+            //steps {
+                //sh 'npm test'
+            //}
+        //}
+        //stage('Build the Project') {
+            //steps {
+                //sh 'npm run build'
+            //}
+        //}
+        stage('Deploy to Render') {
+            steps {
+                withCredentials([string(credentialsId: '2020', variable: 'RENDER_API_KEY')]) {
+                    sh '''
+                    curl -X POST https://api.render.com/v1/services/{srv-cq3q4mjqf0us73dligu0}/deploys \
+                        -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                        -H "Content-Type: application/json" \
+                        -d '{"autoDeploy": true}'
+                    '''
+                }
+            }
+        }
+    }
+}
