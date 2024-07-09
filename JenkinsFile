@@ -22,7 +22,7 @@ pipeline {
         //}
         //stage('Build the Project') {
             //steps {
-                //sh 'npm run build'
+               //sh 'npm run build'
             //}
         //}
         stage('Deploy to Render') {
