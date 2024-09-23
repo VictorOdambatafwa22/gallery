@@ -1,0 +1,90 @@
+pipeline {
+    agent any
+    
+     environment {
+
+        EMAIL_BODY = 
+
+        """
+
+            <p>EXECUTED: Job <b>\'${env.JOB_NAME}:${env.BUILD_NUMBER})\'</b></p>
+
+            <p>
+
+            View console output at 
+
+            "<a href="${env.BUILD_URL}">${env.JOB_NAME}:${env.BUILD_NUMBER}</a>"
+
+            </p> 
+
+            <p><i>(Build log is attached.)</i></p>
+
+        """
+
+        EMAIL_SUBJECT_SUCCESS = "Status: 'SUCCESS' -Job \'${env.JOB_NAME}:${env.BUILD_NUMBER}\'" 
+
+        EMAIL_SUBJECT_FAILURE = "Status: 'FAILURE' -Job \'${env.JOB_NAME}:${env.BUILD_NUMBER}\'" 
+
+        EMAIL_RECEPIENT = 'omondivictor120@gmail.com'
+
+    }
+        tools {
+        nodejs 'NodeJS-22'
+    }
+    
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/VictorOdambatafwa22/gallery'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        //stage('Run Tests') {
+            //steps {
+                //sh 'npm test'
+            //}
+        //}
+        //stage('Build the Project') {
+            //steps {
+                //sh 'npm run build'
+            //}
+        //}
+        stage('Deploy to Render') {
+            steps {
+                withCredentials([string(credentialsId: '2020', variable: 'RENDER_API_KEY')]) {
+                    sh '''
+                    curl -X POST https://api.render.com/v1/services/{srv-cq3q4mjqf0us73dligu0}/deploys \
+                        -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                        -H "Content-Type: application/json" \
+                        -d '{"autoDeploy": true}'
+                    '''
+                }
+            }
+        }
+    }
+   
+   post {
+        success {
+            emailext attachLog: true, 
+                body: EMAIL_BODY, 
+
+                subject: EMAIL_SUBJECT_SUCCESS,
+
+                to: EMAIL_RECEPIENT
+        }
+
+        failure {
+            emailext attachLog: true, 
+                body: EMAIL_BODY, 
+
+                subject: EMAIL_SUBJECT_FAILURE, 
+
+                to: EMAIL_RECEPIENT
+        }
+    } 
+    
+}
